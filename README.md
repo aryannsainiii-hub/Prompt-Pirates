@@ -17,7 +17,7 @@ and demonstrated technical depth.
 | Resource | Link |
 |---|---|
 | **Live Demo** | [Open SHAYAK](https://shayak-iota.vercel.app/) |
-| **Source Repository** | [GitHub Repository](https://github.com/aryannsainiii-hub/Prompt-Pirates.gitL) |
+| **Source Repository** | [GitHub Repository](https://github.com/aryannsainiii-hub/Prompt-Pirates.git) |
 | **AI Usage Log & Prompt Architecture** | [PROMPTS.md](./PROMPTS.md) |
 
 ### AI Development Histories
