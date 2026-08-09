@@ -1,3 +1,4 @@
+Updated upstream
 // empty file
 {
   "cohort": "AI Cohort · 31 days · 8 modules",
@@ -597,3 +598,5 @@
   }
   ]
 }
+=======
+>>>>>>> Stashed changes

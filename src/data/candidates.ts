@@ -1,3 +1,4 @@
+ Updated upstream
 // empty file
 {
   "candidates": [
@@ -463,3 +464,5 @@
     }
   ]
 }
+=======
+>>>>>>> Stashed changes
