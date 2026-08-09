@@ -27,9 +27,9 @@ contributors are available through `PROMPTS.md`.
 
 | Contributor | AI Chat History |
 |---|---|
-| Developer 01 | [View AI Prompt history](https://chatgpt.com/share/6a7878ab-d218-83e8-b3a2-a0bbb7468ff9) |
-| Developer 02 | [View AI Prompt history](https://chatgpt.com/share/6a787541-056c-83ee-8668-8b64a9e59d60) |
-| Developer 02 | [View AI Prompt history](https://chatgpt.com/share/6a787541-056c-83ee-8668-8b64a9e59d60) |
+| Developer 01-- arunesh-unoff-1111| [View AI Prompt history](https://chatgpt.com/share/6a7878ab-d218-83e8-b3a2-a0bbb7468ff9) |
+| Developer 02--aryannsainiii-hub | [View AI Prompt history](https://chatgpt.com/share/6a787541-056c-83ee-8668-8b64a9e59d60) |
+| Developer 03 -- aryan003m| [View AI Prompt history](https://chatgpt.com/share/6a787541-056c-83ee-8668-8b64a9e59d60) |
 | Final Prompt history | [View AI Prompt history](https://chatgpt.com/share/6a7880a9-5b18-83ee-a3c6-c6bb8b42f820) |
 
 > **Important:** `PROMPTS.md` contains the complete prompt

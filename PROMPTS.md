@@ -36,7 +36,7 @@ hackathon's authenticity review.
 
 ## Developer 01
 
-**AI Development Conversation:**
+**AI Development Conversation: arunesh-unoff-1111**
 
 [View Developer 01 AI Prompt History](https://chatgpt.com/share/6a7878ab-d218-83e8-b3a2-a0bbb7468ff9)
 
@@ -47,7 +47,7 @@ by Developer 01 during the development of SHAYAK.
 
 ## Developer 02
 
-**AI Development Conversation:**
+**AI Development Conversation: aryannsainiii-hub**
 
 [View Developer 02 AI Chat History](https://chatgpt.com/share/6a787541-056c-83ee-8668-8b64a9e59d60)
 
@@ -58,7 +58,7 @@ by Developer 02 during the development of SHAYAK.
 
 ## Developer 03
 
-**AI Development Conversation:**
+**AI Development Conversation: aryan003m**
 
 [View Developer 03 AI Prompt History](https://chatgpt.com/share/6a76bea9-559c-83ee-9d56-8e190ec4c107?ogimg=plain)
 
