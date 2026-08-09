@@ -1,4 +1,3 @@
-// empty file
 import { CandidateProfile, InterviewSession, InterviewTurn, EvaluationResult } from '../types';
 import { AI_COHORT_CURRICULUM, getCurriculumDay } from '../data/curriculum';
 import { getCandidateById } from '../data/candidates';
@@ -8,84 +7,94 @@ import { generateQuestion, evaluateAnswer, generateFinalFeedback } from './gemin
 export const MINIMUM_QUESTIONS = 8;
 export const MINIMUM_DAYS = 4;
 
+/**
+ * Select 4 core curriculum days from the candidate's completed days list.
+ */
 export function chooseCoreDays(candidate: CandidateProfile): number[] {
-  const completed = candidate.completedDays && candidate.completedDays.length > 0 
-    ? candidate.completedDays 
-    : [1, 3, 7, 10];
+  const completed = candidate.completedDays;
+  if (!completed || completed.length === 0) {
+    return [1, 3, 7, 10]; // Default fallback days
+  }
 
   if (completed.length <= MINIMUM_DAYS) {
     return [...completed];
   }
 
+  // Pick up to 4 spread across early, mid, and late curriculum
   const step = Math.floor(completed.length / MINIMUM_DAYS);
   const selected: number[] = [];
 
   for (let i = 0; i < MINIMUM_DAYS; i++) {
     const idx = Math.min(i * step, completed.length - 1);
-    const dayVal = completed[idx];
-    if (!selected.includes(dayVal)) {
-      selected.push(dayVal);
+    const day = completed[idx];
+    if (!selected.includes(day)) {
+      selected.push(day);
     }
   }
 
-  if (selected.length < MINIMUM_DAYS) {
-    for (const day of completed) {
-      if (!selected.includes(day)) {
-        selected.push(day);
-        if (selected.length >= MINIMUM_DAYS) break;
-      }
+  // Fill up if duplicates occurred
+  for (const day of completed) {
+    if (selected.length >= MINIMUM_DAYS) break;
+    if (!selected.includes(day)) {
+      selected.push(day);
     }
   }
 
   return selected.sort((a, b) => a - b);
 }
 
+/**
+ * Start a new interview session for candidate.
+ */
 export async function startInterview(
   candidateInput: string | CandidateProfile,
   customSessionId?: string,
   language: string = 'English'
 ): Promise<InterviewSession> {
-  let candidate: CandidateProfile;
+  let candidate: CandidateProfile | undefined;
 
   if (typeof candidateInput === 'string') {
-    const found = getCandidateById(candidateInput);
-    if (!found) {
-      throw new Error('Candidate profile not found or invalid.');
-    }
-    candidate = found;
-  } else {
+    candidate = getCandidateById(candidateInput);
+  } else if (candidateInput && typeof candidateInput === 'object') {
     candidate = candidateInput;
   }
 
-  if (!candidate.completedDays || candidate.completedDays.length === 0) {
+  if (!candidate) {
+    throw new Error(`Candidate profile not found or invalid.`);
+  }
+
+  // Ensure minimum candidate structure fields exist
+  if (!candidate.completedDays) {
     candidate.completedDays = [1, 3, 7, 10];
   }
 
   const plannedDays = chooseCoreDays(candidate);
-  
   const session = sessionManager.createSession(candidate, plannedDays, customSessionId, language);
 
+  // Generate First Question on 1st planned day
   const firstDayNum = plannedDays[0] || candidate.completedDays[0] || 1;
   const firstDay = getCurriculumDay(firstDayNum) || AI_COHORT_CURRICULUM[0];
 
-  const question = await generateQuestion(candidate, firstDay, [], false, undefined, language);
+  const firstQuestion = await generateQuestion(candidate, firstDay, [], false, undefined, language);
 
-  sessionManager.updateSession(session.sessionId, {
-    currentQuestion: question,
+  const updatedSession = sessionManager.updateSession(session.sessionId, {
+    currentQuestion: firstQuestion,
     currentQuestionDay: firstDayNum,
-    currentTurnNumber: 1
+    currentTurnNumber: 1,
   });
 
-  return sessionManager.getSession(session.sessionId)!;
+  return updatedSession!;
 }
 
+/**
+ * Process a candidate's answer to the current question.
+ */
 export async function processAnswer(
   sessionId: string,
   answer: string,
   languageInput?: string
 ): Promise<{ session: InterviewSession; lastEvaluation: EvaluationResult }> {
   const session = sessionManager.getSession(sessionId);
-  
   if (!session) {
     throw new Error(`Session '${sessionId}' not found.`);
   }
@@ -95,7 +104,6 @@ export async function processAnswer(
   }
 
   const activeLanguage = languageInput || session.language || 'English';
-  
   if (languageInput && languageInput !== session.language) {
     sessionManager.updateSession(sessionId, { language: languageInput });
   }
@@ -104,73 +112,69 @@ export async function processAnswer(
   const currentDay = getCurriculumDay(currentDayNum) || AI_COHORT_CURRICULUM[0];
   const question = session.currentQuestion || `Explain key concepts for Day ${currentDayNum}: ${currentDay.title}.`;
 
-  const trimmedAnswer = answer.trim();
-  const answerToRecord = trimmedAnswer || '(No answer provided)';
+  // 1. Evaluate the submitted answer
+  const evaluation = await evaluateAnswer(session.candidate, currentDay, question, answer, activeLanguage);
 
-  const evaluation = await evaluateAnswer(
-    session.candidate,
-    currentDay,
-    question,
-    trimmedAnswer,
-    activeLanguage
-  );
-
+  // 2. Record this completed turn
   const turn: InterviewTurn = {
     turnNumber: session.turns.length + 1,
     day: currentDayNum,
     dayTitle: currentDay.title,
     question,
-    answer: answerToRecord,
+    answer: answer.trim() || '(No answer provided)',
     evaluation,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 
   sessionManager.addTurn(sessionId, turn);
 
-  const currentSession = sessionManager.getSession(sessionId)!;
+  // Re-fetch updated session state
+  let currentSession = sessionManager.getSession(sessionId)!;
   const questionCount = currentSession.questionCount;
   const daysCoveredCount = currentSession.daysCovered.length;
 
+  // 3. Check if interview completion conditions are met
   if (questionCount >= MINIMUM_QUESTIONS && daysCoveredCount >= MINIMUM_DAYS) {
-    const finalFeedback = await generateFinalFeedback(
-      currentSession.candidate,
-      currentSession.turns,
-      activeLanguage
-    );
+    // Generate Final Feedback Report
+    const finalFeedback = await generateFinalFeedback(currentSession.candidate, currentSession.turns, activeLanguage);
 
-    sessionManager.updateSession(sessionId, {
+    currentSession = sessionManager.updateSession(sessionId, {
       isCompleted: true,
       currentQuestion: null,
       currentQuestionDay: null,
-      finalFeedback
-    });
+      finalFeedback,
+    })!;
 
     return {
-      session: sessionManager.getSession(sessionId)!,
-      lastEvaluation: evaluation
+      session: currentSession,
+      lastEvaluation: evaluation,
     };
   }
 
-  const turnsOnCurrentDay = currentSession.turns.filter(t => t.day === currentDayNum).length;
+  // 4. Decide next topic and question (Adaptive Routing)
   let nextDayNum: number;
   let isFollowUp = false;
 
-  if (evaluation.score < 6 && turnsOnCurrentDay < 2) {
+  // If previous score < 6 AND we haven't asked 2+ questions on this same day, do a follow-up
+  const turnsOnCurrentDay = currentSession.turns.filter(t => t.day === currentDayNum);
+  if (evaluation.score < 6 && turnsOnCurrentDay.length < 2) {
     nextDayNum = currentDayNum;
     isFollowUp = true;
   } else {
-    const unvisitedPlanned = currentSession.plannedDays.find(d => !currentSession.daysCovered.includes(d));
-    
-    if (unvisitedPlanned !== undefined) {
-      nextDayNum = unvisitedPlanned;
+    // Move to next planned day or pick another completed day
+    const unvisitedPlanned = currentSession.plannedDays.filter(d => !currentSession.daysCovered.includes(d));
+
+    if (unvisitedPlanned.length > 0) {
+      nextDayNum = unvisitedPlanned[0];
     } else {
-      const unvisitedCandidate = currentSession.candidate.completedDays.find(
-        d => !currentSession.daysCovered.includes(d)
-      );
-      
-      if (unvisitedCandidate !== undefined) {
-        nextDayNum = unvisitedCandidate;
+      // If all planned days covered, cycle through all candidate completed days or planned days
+      const candidateCompleted = currentSession.candidate.completedDays;
+      const unvisitedCandidateDays = candidateCompleted.filter(d => !currentSession.daysCovered.includes(d));
+
+      if (unvisitedCandidateDays.length > 0) {
+        nextDayNum = unvisitedCandidateDays[0];
       } else {
+        // Pick day with lowest score or cycle
         const index = questionCount % currentSession.plannedDays.length;
         nextDayNum = currentSession.plannedDays[index];
       }
@@ -178,7 +182,6 @@ export async function processAnswer(
   }
 
   const nextDay = getCurriculumDay(nextDayNum) || currentDay;
-  
   const nextQuestion = await generateQuestion(
     currentSession.candidate,
     nextDay,
@@ -188,18 +191,21 @@ export async function processAnswer(
     activeLanguage
   );
 
-  sessionManager.updateSession(sessionId, {
+  currentSession = sessionManager.updateSession(sessionId, {
     currentQuestion: nextQuestion,
     currentQuestionDay: nextDayNum,
-    currentTurnNumber: questionCount + 1
-  });
+    currentTurnNumber: questionCount + 1,
+  })!;
 
   return {
-    session: sessionManager.getSession(sessionId)!,
-    lastEvaluation: evaluation
+    session: currentSession,
+    lastEvaluation: evaluation,
   };
 }
 
+/**
+ * Technical Specification Compliant Single-Endpoint Handler for POST /api/interview
+ */
 export async function handleApiInterview(body: any): Promise<{
   reply: string;
   done: boolean;
@@ -216,53 +222,40 @@ export async function handleApiInterview(body: any): Promise<{
     throw new Error('sessionId is required for POST /api/interview');
   }
 
+  // Flow 1: Start Interview (candidate provided)
   if (rawCandidate) {
     let candidateObj: CandidateProfile;
 
     if (typeof rawCandidate === 'string') {
       const found = getCandidateById(rawCandidate);
-      if (found) {
-        candidateObj = found;
-      } else {
-        candidateObj = {
-          id: rawCandidate,
-          name: 'Interview Candidate',
-          role: 'Candidate',
-          background: '31-Day AI Cohort Participant',
-          experienceLevel: 'Cohort Member',
-          completedDays: [1, 3, 7, 10],
-          targetAreas: ['RAG', 'Vector Search', 'LLMs'],
-          notes: ''
-        };
-      }
+      candidateObj = found || {
+        id: rawCandidate,
+        name: 'Interview Candidate',
+        role: 'Candidate',
+        background: '31-Day AI Cohort Participant',
+        experienceLevel: 'Cohort Member',
+        completedDays: [1, 3, 7, 10],
+        targetAreas: ['RAG', 'Vector Search', 'LLMs'],
+        notes: '',
+      };
     } else if (rawCandidate.member) {
+      // Candidate object with member, missions, signals
       const found = getCandidateById(rawCandidate.member.id);
-      if (found) {
-        candidateObj = found;
-      } else {
-        const jobRole = rawCandidate.member.jobRole || 'Software Engineer';
-        const yearsExperience = rawCandidate.member.yearsExperience || 0;
-        const education = rawCandidate.member.education || 'Self-taught';
-        
-        candidateObj = {
-          id: rawCandidate.member.id || 'CAND-000',
-          name: rawCandidate.member.name || 'Candidate',
-          role: jobRole,
-          background: `${jobRole} (${yearsExperience} yrs exp, ${education})`,
-          experienceLevel: `${yearsExperience} yrs exp`,
-          completedDays: (rawCandidate.missions || [])
-            .filter((m: any) => m.passed)
-            .map((m: any) => m.day),
-          targetAreas: (rawCandidate.missions || [])
-            .slice(0, 4)
-            .map((m: any) => m.title),
-          notes: '',
-          member: rawCandidate.member,
-          missions: rawCandidate.missions,
-          signals: rawCandidate.signals
-        };
-      }
+      candidateObj = found || {
+        id: rawCandidate.member.id || 'CAND-000',
+        name: rawCandidate.member.name || 'Candidate',
+        role: rawCandidate.member.jobRole || 'Software Engineer',
+        background: `${rawCandidate.member.jobRole || ''} (${rawCandidate.member.yearsExperience || 0} yrs exp, ${rawCandidate.member.education || ''})`,
+        experienceLevel: `${rawCandidate.member.yearsExperience || 0} yrs exp`,
+        completedDays: (rawCandidate.missions || []).filter((m: any) => m.passed).map((m: any) => m.day),
+        targetAreas: (rawCandidate.missions || []).slice(0, 4).map((m: any) => m.title),
+        notes: '',
+        member: rawCandidate.member,
+        missions: rawCandidate.missions,
+        signals: rawCandidate.signals,
+      };
     } else {
+      // General profile object
       candidateObj = {
         id: rawCandidate.id || 'CAND-000',
         name: rawCandidate.name || rawCandidate.jobRole || 'Candidate',
@@ -271,7 +264,7 @@ export async function handleApiInterview(body: any): Promise<{
         experienceLevel: rawCandidate.experienceLevel || 'Mid-Senior',
         completedDays: rawCandidate.completedDays || [1, 3, 7, 10],
         targetAreas: rawCandidate.targetAreas || ['AI Architecture'],
-        notes: rawCandidate.notes || ''
+        notes: rawCandidate.notes || '',
       };
     }
 
@@ -279,17 +272,18 @@ export async function handleApiInterview(body: any): Promise<{
     if (existingSession && existingSession.currentQuestion) {
       return {
         reply: `Welcome. Let's begin your interview.\n\n${existingSession.currentQuestion}`,
-        done: false
+        done: false,
       };
     }
 
     const session = await startInterview(candidateObj, sessionId, language);
     return {
       reply: `Welcome. Let's begin your interview.\n\n${session.currentQuestion}`,
-      done: false
+      done: false,
     };
   }
 
+  // Flow 2 & 3: Turn or End Interview (message provided)
   const existingSession = sessionManager.getSession(sessionId);
   if (!existingSession) {
     throw new Error(`Session '${sessionId}' not found. Please initialize session with candidate payload first.`);
@@ -304,13 +298,13 @@ export async function handleApiInterview(body: any): Promise<{
         summary: fb.overallSummary,
         strengths: fb.strengths,
         gaps: fb.gaps,
-        next: fb.recommendedNextSteps
+        next: fb.recommendedNextSteps,
       } : {
         summary: 'Interview completed successfully.',
         strengths: ['Demonstrated understanding across key cohort topics.'],
         gaps: [],
-        next: ['Review capstone module materials.']
-      }
+        next: ['Review capstone module materials.'],
+      },
     };
   }
 
@@ -325,8 +319,8 @@ export async function handleApiInterview(body: any): Promise<{
         summary: fb.overallSummary,
         strengths: fb.strengths,
         gaps: fb.gaps,
-        next: fb.recommendedNextSteps
-      }
+        next: fb.recommendedNextSteps,
+      },
     };
   }
 
@@ -335,6 +329,6 @@ export async function handleApiInterview(body: any): Promise<{
 
   return {
     reply: `${feedbackPrefix}${nextQ}`,
-    done: false
+    done: false,
   };
 }

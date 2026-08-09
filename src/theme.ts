@@ -1,281 +1,148 @@
-/* =========================================================
-   SHAYAK - THEME CONFIGURATION
-========================================================= */
+export type ThemeId =
+  | 'trust-blue'
+  | 'dark-slate'
+  | 'vibrant-violet'
+  | 'organic-sage'
+  | 'monochrome-crimson';
 
-import type { ThemeMode } from "./types";
+export interface ThemeConfig {
+  id: ThemeId;
+  name: string;
+  isDark: boolean;
+  bg: string;
+  gridLineColor: string;
+  gridDotColor: string;
+  headerBg: string;
+  cardBg: string;
+  cardSubtleBg: string;
+  border: string;
+  textPrimary: string;
+  textMuted: string;
+  accent: string;
+  accentBg: string;
+  accentText: string;
+  buttonPrimary: string;
+  interviewerBubble: string;
+  candidateBubble: string;
+  textareaBg: string;
+  pillBg: string;
+  tagFollowUpBg: string;
+}
 
-
-/* ---------------------------------------------------------
-   COLOR PALETTE
---------------------------------------------------------- */
-
-export const colors = {
-  primary: {
-    50: "#eef2ff",
-    100: "#e0e7ff",
-    200: "#c7d2fe",
-    300: "#a5b4fc",
-    400: "#818cf8",
-    500: "#6366f1",
-    600: "#4f46e5",
-    700: "#4338ca",
-    800: "#3730a3",
-    900: "#312e81",
+export const classNameThemeMap: Record<ThemeId, ThemeConfig> = {
+  'dark-slate': {
+    id: 'dark-slate',
+    name: 'Dark Mode Neon & Slate',
+    isDark: true,
+    bg: 'bg-[#0B1120] text-slate-100',
+    gridLineColor: 'rgba(71, 85, 105, 0.28)',
+    gridDotColor: 'rgba(45, 212, 191, 0.35)',
+    headerBg: 'bg-[#0B1120]/90 backdrop-blur-md border-slate-800/80 text-slate-100',
+    cardBg: 'bg-[#162033] border-slate-700/60 shadow-xl shadow-slate-950/40',
+    cardSubtleBg: 'bg-[#101827]/85 border-slate-800',
+    border: 'border-slate-800',
+    textPrimary: 'text-slate-100',
+    textMuted: 'text-slate-400',
+    accent: 'text-[#2DD4BF]',
+    accentBg: 'bg-[#2DD4BF]/10 border-[#2DD4BF]/30 text-[#5EEAD4]',
+    accentText: 'text-[#5EEAD4]',
+    buttonPrimary: 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold shadow-lg shadow-teal-500/20',
+    interviewerBubble: 'bg-[#162033] border-slate-700/80 text-slate-100',
+    candidateBubble: 'bg-[#0F172A] border-teal-500/40 text-teal-100',
+    textareaBg: 'bg-[#0B1120] border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-[#2DD4BF]',
+    pillBg: 'bg-slate-800/90 border-slate-700 text-slate-300',
+    tagFollowUpBg: 'bg-teal-500/15 border-teal-500/40 text-teal-300',
   },
-
-  success: {
-    50: "#ecfdf5",
-    500: "#10b981",
-    600: "#059669",
+  'trust-blue': {
+    id: 'trust-blue',
+    name: 'Trust Blue & Crisp White',
+    isDark: false,
+    bg: 'bg-[#F8FAFC] text-slate-900',
+    gridLineColor: 'rgba(203, 213, 225, 0.65)',
+    gridDotColor: 'rgba(37, 99, 235, 0.28)',
+    headerBg: 'bg-white/90 backdrop-blur-md border-slate-200 text-slate-900 shadow-xs',
+    cardBg: 'bg-[#FFFFFF] border-slate-200/90 shadow-sm',
+    cardSubtleBg: 'bg-[#F8FAFC] border-slate-200',
+    border: 'border-slate-200',
+    textPrimary: 'text-slate-900',
+    textMuted: 'text-slate-500',
+    accent: 'text-[#2563EB]',
+    accentBg: 'bg-[#2563EB]/10 border-[#2563EB]/25 text-[#1D4ED8]',
+    accentText: 'text-[#1D4ED8]',
+    buttonPrimary: 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold shadow-md shadow-blue-500/20',
+    interviewerBubble: 'bg-white border-slate-200 text-slate-900 shadow-2xs',
+    candidateBubble: 'bg-blue-50 border-blue-200 text-blue-950 shadow-2xs',
+    textareaBg: 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#2563EB]',
+    pillBg: 'bg-slate-100 border-slate-200 text-slate-700',
+    tagFollowUpBg: 'bg-blue-100 border-blue-300 text-blue-800',
   },
-
-  warning: {
-    50: "#fffbeb",
-    500: "#f59e0b",
-    600: "#d97706",
+  'vibrant-violet': {
+    id: 'vibrant-violet',
+    name: 'Vibrant Violet & Soft Lilac',
+    isDark: true,
+    bg: 'bg-[#100D1F] text-slate-100',
+    gridLineColor: 'rgba(124, 108, 196, 0.2)',
+    gridDotColor: 'rgba(167, 139, 250, 0.35)',
+    headerBg: 'bg-[#16122A]/90 backdrop-blur-md border-violet-900/50 text-slate-100',
+    cardBg: 'bg-[#1B1733] border-violet-800/40 shadow-xl shadow-violet-950/40',
+    cardSubtleBg: 'bg-[#241D42] border-violet-800/30',
+    border: 'border-violet-800/40',
+    textPrimary: 'text-slate-100',
+    textMuted: 'text-violet-200/65',
+    accent: 'text-[#A78BFA]',
+    accentBg: 'bg-[#8B5CF6]/15 border-[#8B5CF6]/35 text-[#C4B5FD]',
+    accentText: 'text-[#C4B5FD]',
+    buttonPrimary: 'bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold shadow-lg shadow-violet-900/40',
+    interviewerBubble: 'bg-[#211B3B] border-violet-800/50 text-slate-100',
+    candidateBubble: 'bg-[#2A2148] border-violet-500/40 text-violet-100',
+    textareaBg: 'bg-[#100D1F] border-violet-800/60 text-slate-100 placeholder:text-violet-300/50 focus:border-[#A78BFA]',
+    pillBg: 'bg-[#211B3B] border-violet-800/50 text-violet-200',
+    tagFollowUpBg: 'bg-violet-500/15 border-violet-400/40 text-violet-200',
   },
-
-  danger: {
-    50: "#fef2f2",
-    500: "#ef4444",
-    600: "#dc2626",
+  'organic-sage': {
+    id: 'organic-sage',
+    name: 'Organic Sage & Warm Sand',
+    isDark: false,
+    bg: 'bg-[#FAFAF7] text-stone-900',
+    gridLineColor: 'rgba(203, 201, 190, 0.6)',
+    gridDotColor: 'rgba(13, 148, 136, 0.28)',
+    headerBg: 'bg-[#FAFAF7]/90 backdrop-blur-md border-stone-200 text-stone-900 shadow-2xs',
+    cardBg: 'bg-[#FFFFFF] border-stone-200/90 shadow-xs',
+    cardSubtleBg: 'bg-[#F4F3EE] border-stone-300/60',
+    border: 'border-stone-300',
+    textPrimary: 'text-stone-900',
+    textMuted: 'text-stone-600',
+    accent: 'text-[#0F766E]',
+    accentBg: 'bg-[#0F766E]/10 border-[#0F766E]/25 text-teal-800',
+    accentText: 'text-teal-800',
+    buttonPrimary: 'bg-[#0F766E] hover:bg-[#115E59] text-white font-bold shadow-md shadow-teal-700/20',
+    interviewerBubble: 'bg-[#FFFFFF] border-stone-300/80 text-stone-900',
+    candidateBubble: 'bg-[#E6F4F1] border-teal-300/80 text-teal-950',
+    textareaBg: 'bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 focus:border-[#0F766E]',
+    pillBg: 'bg-stone-100/90 border-stone-300 text-stone-700',
+    tagFollowUpBg: 'bg-teal-100 border-teal-300 text-teal-900',
   },
-
-  slate: {
-    50: "#f8fafc",
-    100: "#f1f5f9",
-    200: "#e2e8f0",
-    300: "#cbd5e1",
-    400: "#94a3b8",
-    500: "#64748b",
-    600: "#475569",
-    700: "#334155",
-    800: "#1e293b",
-    900: "#0f172a",
-    950: "#020617",
+  'monochrome-crimson': {
+    id: 'monochrome-crimson',
+    name: 'Minimalist Monochrome & Crimson',
+    isDark: true,
+    bg: 'bg-[#090A0C] text-neutral-100',
+    gridLineColor: 'rgba(82, 82, 91, 0.3)',
+    gridDotColor: 'rgba(244, 63, 94, 0.4)',
+    headerBg: 'bg-[#090A0C]/90 backdrop-blur-md border-neutral-800 text-neutral-100',
+    cardBg: 'bg-[#141519] border-neutral-800 shadow-2xl shadow-black/60',
+    cardSubtleBg: 'bg-[#1B1C21] border-neutral-800',
+    border: 'border-neutral-800',
+    textPrimary: 'text-neutral-100',
+    textMuted: 'text-neutral-400',
+    accent: 'text-[#F43F5E]',
+    accentBg: 'bg-[#F43F5E]/10 border-[#F43F5E]/30 text-[#FB7185]',
+    accentText: 'text-[#FB7185]',
+    buttonPrimary: 'bg-[#E11D48] hover:bg-[#BE123C] text-white font-bold shadow-lg shadow-rose-600/20',
+    interviewerBubble: 'bg-[#17181C] border-neutral-800 text-neutral-100',
+    candidateBubble: 'bg-[#241318] border-rose-900/50 text-rose-100',
+    textareaBg: 'bg-[#0D0E11] border-neutral-800 text-neutral-100 placeholder:text-neutral-600 focus:border-[#F43F5E]',
+    pillBg: 'bg-[#191A1E] border-neutral-800 text-neutral-300',
+    tagFollowUpBg: 'bg-rose-950/60 border-rose-800 text-rose-300',
   },
-} as const;
-
-
-/* ---------------------------------------------------------
-   LIGHT THEME
---------------------------------------------------------- */
-
-export const lightTheme = {
-  mode: "light" as const,
-
-  background: {
-    page: "#f8fafc",
-    surface: "#ffffff",
-    surfaceMuted: "#f1f5f9",
-    elevated: "#ffffff",
-  },
-
-  text: {
-    primary: "#0f172a",
-    secondary: "#475569",
-    muted: "#64748b",
-    inverse: "#ffffff",
-  },
-
-  border: {
-    default: "#e2e8f0",
-    strong: "#cbd5e1",
-  },
-
-  primary: colors.primary[600],
-
-  status: {
-    success: colors.success[500],
-    warning: colors.warning[500],
-    danger: colors.danger[500],
-  },
-};
-
-
-/* ---------------------------------------------------------
-   DARK THEME
---------------------------------------------------------- */
-
-export const darkTheme = {
-  mode: "dark" as const,
-
-  background: {
-    page: "#0b1020",
-    surface: "#11182b",
-    surfaceMuted: "#172033",
-    elevated: "#151d32",
-  },
-
-  text: {
-    primary: "#f8fafc",
-    secondary: "#cbd5e1",
-    muted: "#94a3b8",
-    inverse: "#0f172a",
-  },
-
-  border: {
-    default: "rgba(255,255,255,0.10)",
-    strong: "rgba(255,255,255,0.18)",
-  },
-
-  primary: colors.primary[500],
-
-  status: {
-    success: colors.success[500],
-    warning: colors.warning[500],
-    danger: colors.danger[500],
-  },
-};
-
-
-/* ---------------------------------------------------------
-   THEME MAP
---------------------------------------------------------- */
-
-export const themes = {
-  light: lightTheme,
-  dark: darkTheme,
-};
-
-
-/* ---------------------------------------------------------
-   GET CURRENT THEME
---------------------------------------------------------- */
-
-export const getTheme = (mode: ThemeMode) => {
-  return themes[mode];
-};
-
-
-/* ---------------------------------------------------------
-   TYPOGRAPHY
---------------------------------------------------------- */
-
-export const typography = {
-  fontFamily:
-    'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-
-  sizes: {
-    xs: "0.75rem",
-    sm: "0.875rem",
-    md: "1rem",
-    lg: "1.125rem",
-    xl: "1.25rem",
-    "2xl": "1.5rem",
-    "3xl": "1.875rem",
-    "4xl": "2.25rem",
-  },
-
-  weights: {
-    regular: 400,
-    medium: 500,
-    semibold: 600,
-    bold: 700,
-  },
-};
-
-
-/* ---------------------------------------------------------
-   SPACING
---------------------------------------------------------- */
-
-export const spacing = {
-  xs: "0.25rem",
-  sm: "0.5rem",
-  md: "1rem",
-  lg: "1.5rem",
-  xl: "2rem",
-  "2xl": "3rem",
-};
-
-
-/* ---------------------------------------------------------
-   RADIUS
---------------------------------------------------------- */
-
-export const radius = {
-  sm: "0.5rem",
-  md: "0.75rem",
-  lg: "1rem",
-  xl: "1.25rem",
-  "2xl": "1.5rem",
-  full: "9999px",
-};
-
-
-/* ---------------------------------------------------------
-   SHADOWS
---------------------------------------------------------- */
-
-export const shadows = {
-  sm:
-    "0 1px 2px rgba(15, 23, 42, 0.05)",
-
-  md:
-    "0 4px 12px rgba(15, 23, 42, 0.08)",
-
-  lg:
-    "0 10px 30px rgba(15, 23, 42, 0.12)",
-
-  primary:
-    "0 10px 30px rgba(79, 70, 229, 0.20)",
-};
-
-
-/* ---------------------------------------------------------
-   BREAKPOINTS
---------------------------------------------------------- */
-
-export const breakpoints = {
-  sm: "640px",
-  md: "768px",
-  lg: "1024px",
-  xl: "1280px",
-  "2xl": "1536px",
-};
-
-
-/* ---------------------------------------------------------
-   ANIMATION
---------------------------------------------------------- */
-
-export const animation = {
-  fast: "150ms",
-  normal: "250ms",
-  slow: "400ms",
-
-  easing:
-    "cubic-bezier(0.4, 0, 0.2, 1)",
-};
-
-
-/* ---------------------------------------------------------
-   Z-INDEX
---------------------------------------------------------- */
-
-export const zIndex = {
-  base: 0,
-  sidebar: 30,
-  header: 40,
-  dropdown: 50,
-  modal: 100,
-  toast: 200,
-};
-
-
-/* ---------------------------------------------------------
-   DEFAULT THEME SETTINGS
---------------------------------------------------------- */
-
-export const defaultThemeSettings = {
-  mode: "light" as ThemeMode,
-
-  primaryColor: colors.primary[600],
-
-  borderRadius: radius.lg,
-
-  fontFamily: typography.fontFamily,
-
-  transitionDuration: animation.normal,
 };

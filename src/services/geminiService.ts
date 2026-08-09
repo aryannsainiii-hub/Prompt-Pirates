@@ -1,17 +1,6 @@
-// empty file
 import { GoogleGenAI, Type } from '@google/genai';
-import {
-  CandidateProfile,
-  CurriculumDay,
-  EvaluationResult,
-  FinalFeedback,
-  InterviewTurn
-} from '../types';
-import {
-  buildQuestionPrompt,
-  buildEvaluationPrompt,
-  buildFinalFeedbackPrompt
-} from './prompts';
+import { CandidateProfile, CurriculumDay, EvaluationResult, FinalFeedback, InterviewTurn } from '../types';
+import { buildQuestionPrompt, buildEvaluationPrompt, buildFinalFeedbackPrompt } from './prompts';
 
 let genAIInstance: GoogleGenAI | null = null;
 
@@ -20,27 +9,27 @@ function getGenAI(): GoogleGenAI | null {
   if (!apiKey) {
     return null;
   }
-  
-  if (genAIInstance) {
-    return genAIInstance;
+  if (!genAIInstance) {
+    try {
+      genAIInstance = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
+    } catch (e) {
+      console.warn('Failed to initialize GoogleGenAI instance:', e);
+      return null;
+    }
   }
-
-  try {
-    genAIInstance = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build'
-        }
-      }
-    });
-    return genAIInstance;
-  } catch (error) {
-    console.warn('Failed to initialize GoogleGenAI instance:', error);
-    return null;
-  }
+  return genAIInstance;
 }
 
+/**
+ * Generate an interview question tailored to candidate profile and curriculum day.
+ */
 export async function generateQuestion(
   candidate: CandidateProfile,
   day: CurriculumDay,
@@ -58,27 +47,29 @@ export async function generateQuestion(
         model: 'gemini-3.6-flash',
         contents: prompt,
         config: {
-          temperature: 0.7
-        }
+          temperature: 0.7,
+        },
       });
-      
-      const generatedQuestion = response.text?.trim();
-      if (generatedQuestion && generatedQuestion.length > 10) {
-        return generatedQuestion;
+
+      const question = response.text?.trim();
+      if (question && question.length > 10) {
+        return question;
       }
     }
-  } catch (error) {
-    console.warn('Gemini question generation failed, using fallback question:', error);
+  } catch (err) {
+    console.error('Gemini question generation failed, using fallback question:', err);
   }
 
-  // Fallback question
+  // Robust Fallback Question
   if (isFollowUp) {
     return `Looking back at Day ${day.day} (${day.title}), what specific debugging steps or metric checks would you perform when encountering production issues with ${day.keyConcepts[0] || 'this architecture'}?`;
   }
-  
   return `In Day ${day.day} (${day.title}), suppose you are designing a production solution utilizing ${day.keyConcepts.join(', ')}. What key architectural trade-offs and failure modes would you evaluate?`;
 }
 
+/**
+ * Evaluate a candidate's answer with full structured feedback and score.
+ */
 export async function evaluateAnswer(
   candidate: CandidateProfile,
   day: CurriculumDay,
@@ -86,9 +77,8 @@ export async function evaluateAnswer(
   answer: string,
   language: string = 'English'
 ): Promise<EvaluationResult> {
+  // Catch empty or extremely short garbage answers immediately to reduce LLM overhead
   const trimmed = answer.trim();
-  
-  // Immediate short-answer protection
   if (!trimmed || trimmed.length < 3) {
     return {
       score: 2,
@@ -96,7 +86,7 @@ export async function evaluateAnswer(
       strengths: [],
       gaps: ['Response lacked technical detail and architectural explanation.'],
       needsFollowUp: true,
-      suggestedTopic: day.title
+      suggestedTopic: day.title,
     };
   }
 
@@ -113,88 +103,65 @@ export async function evaluateAnswer(
           responseSchema: {
             type: Type.OBJECT,
             properties: {
-              score: {
-                type: Type.NUMBER,
-                description: 'Score between 1 and 10'
-              },
-              feedback: {
-                type: Type.STRING,
-                description: 'Constructive evaluation text'
-              },
+              score: { type: Type.NUMBER, description: 'Score between 1 and 10' },
+              feedback: { type: Type.STRING, description: 'Constructive evaluation text' },
               strengths: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
-                description: 'List of candidate strengths shown in answer'
+                description: 'List of candidate strengths shown in answer',
               },
               gaps: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
-                description: 'List of technical gaps or missed concepts'
+                description: 'List of technical gaps or missed concepts',
               },
-              needsFollowUp: {
-                type: Type.BOOLEAN,
-                description: 'True if score < 6'
-              }
+              needsFollowUp: { type: Type.BOOLEAN, description: 'True if score < 6' },
             },
-            required: ['score', 'feedback', 'strengths', 'gaps', 'needsFollowUp']
-          }
-        }
+            required: ['score', 'feedback', 'strengths', 'gaps', 'needsFollowUp'],
+          },
+        },
       });
 
       const jsonText = response.text?.trim();
       if (jsonText) {
         const parsed = JSON.parse(jsonText);
-        
-        let score = Number(parsed.score);
-        if (isNaN(score)) {
-          score = 5;
-        } else {
-          score = Math.max(1, Math.min(10, Math.round(score)));
-        }
-
+        const score = typeof parsed.score === 'number' ? Math.max(1, Math.min(10, Math.round(parsed.score))) : 5;
         return {
           score,
           feedback: parsed.feedback || 'Answer evaluated based on technical accuracy and depth.',
           strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
           gaps: Array.isArray(parsed.gaps) ? parsed.gaps : ['Could elaborate more on production edge cases.'],
           needsFollowUp: typeof parsed.needsFollowUp === 'boolean' ? parsed.needsFollowUp : score < 6,
-          suggestedTopic: day.title
+          suggestedTopic: day.title,
         };
       }
     }
-  } catch (error) {
-    console.warn('Gemini answer evaluation error, using fallback evaluation:', error);
+  } catch (err) {
+    console.error('Gemini answer evaluation error, using fallback evaluation:', err);
   }
 
-  // Deterministic answer-evaluation fallback
+  // Safe fallback heuristic evaluation
   const wordCount = trimmed.split(/\s+/).length;
-  const mentionsKeyConcept = day.keyConcepts.some((concept) =>
-    trimmed.toLowerCase().includes(concept.toLowerCase())
-  );
-
+  const hasKeyConcepts = day.keyConcepts.some(kc => trimmed.toLowerCase().includes(kc.toLowerCase()));
+  
   let fallbackScore = 5;
-  if (wordCount > 30 && mentionsKeyConcept) {
-    fallbackScore = 8;
-  } else if (wordCount > 15) {
-    fallbackScore = 6;
-  } else {
-    fallbackScore = 3;
-  }
+  if (wordCount > 30 && hasKeyConcepts) fallbackScore = 8;
+  else if (wordCount > 15) fallbackScore = 6;
+  else fallbackScore = 3;
 
   return {
     score: fallbackScore,
-    feedback: `Evaluated Day ${day.day} (${day.title}) response based on ${wordCount} words length and key concept inclusion.`,
-    strengths: mentionsKeyConcept
-      ? [`Mentioned core concept relative to ${day.title}`]
-      : ['Attempted response'],
-    gaps: !mentionsKeyConcept
-      ? [`Did not explicitly reference core concepts like ${day.keyConcepts.slice(0, 2).join(', ')}`]
-      : ['Could provide deeper architectural details'],
+    feedback: `Evaluated candidate answer on Day ${day.day} (${day.title}). Response length: ${wordCount} words.`,
+    strengths: hasKeyConcepts ? [`Mentioned core concept relative to ${day.title}`] : ['Attempted response'],
+    gaps: !hasKeyConcepts ? [`Did not explicitly reference core concepts like ${day.keyConcepts.slice(0, 2).join(', ')}`] : ['Could provide deeper architectural details'],
     needsFollowUp: fallbackScore < 6,
-    suggestedTopic: day.title
+    suggestedTopic: day.title,
   };
 }
 
+/**
+ * Generate final assessment report for completed interview.
+ */
 export async function generateFinalFeedback(
   candidate: CandidateProfile,
   turns: InterviewTurn[],
@@ -202,26 +169,24 @@ export async function generateFinalFeedback(
 ): Promise<FinalFeedback> {
   const prompt = buildFinalFeedbackPrompt(candidate, turns, language);
 
-  // Calculate day scores
+  // Compute average score per day
   const dayScores: Record<number, number> = {};
-  for (const turn of turns) {
-    if (turn.evaluation) {
-      dayScores[turn.day] = turn.evaluation.score;
+  turns.forEach(t => {
+    if (t.evaluation) {
+      dayScores[t.day] = t.evaluation.score;
     }
-  }
+  });
 
   const scoresList = Object.values(dayScores);
-  const sum = scoresList.reduce((acc, val) => acc + val, 0);
-  const avg10 = scoresList.length > 0 ? sum / scoresList.length : 7;
+  const avg10 = scoresList.length > 0 ? scoresList.reduce((a, b) => a + b, 0) / scoresList.length : 7;
   const overall100 = Math.round(avg10 * 10);
 
-  // Calculate category scores
   const categoryScores = {
     overallScore: overall100,
     technicalAccuracy: Math.min(100, Math.round(overall100 * 1.05)),
     depth: Math.max(50, Math.round(overall100 * 0.95)),
     reasoning: Math.min(100, Math.round(overall100 * 1.02)),
-    communication: Math.min(100, Math.round(overall100 * 0.98))
+    communication: Math.min(100, Math.round(overall100 * 0.98)),
   };
 
   try {
@@ -236,35 +201,19 @@ export async function generateFinalFeedback(
             type: Type.OBJECT,
             properties: {
               overallSummary: { type: Type.STRING },
-              strengths: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
-              },
-              gaps: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
-              },
-              recommendedNextSteps: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
-              },
-              technicalLevel: { type: Type.STRING }
+              strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+              gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+              recommendedNextSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
+              technicalLevel: { type: Type.STRING },
             },
-            required: [
-              'overallSummary',
-              'strengths',
-              'gaps',
-              'recommendedNextSteps',
-              'technicalLevel'
-            ]
-          }
-        }
+            required: ['overallSummary', 'strengths', 'gaps', 'recommendedNextSteps', 'technicalLevel'],
+          },
+        },
       });
 
       const jsonText = response.text?.trim();
       if (jsonText) {
         const parsed = JSON.parse(jsonText);
-        
         const validLevels = ['Emerging', 'Competent', 'Advanced', 'Expert'];
         const technicalLevel = validLevels.includes(parsed.technicalLevel)
           ? parsed.technicalLevel
@@ -272,39 +221,33 @@ export async function generateFinalFeedback(
 
         return {
           overallSummary: parsed.overallSummary || `${candidate.name} demonstrated solid engagement across ${turns.length} technical interview questions.`,
-          strengths: Array.isArray(parsed.strengths) ? parsed.strengths : ['Completed all required interview questions'],
+          strengths: Array.isArray(parsed.strengths) ? parsed.strengths : ['Completed all 8 required interview questions'],
           gaps: Array.isArray(parsed.gaps) ? parsed.gaps : ['Further study in production scaling & evaluation recommended'],
           recommendedNextSteps: Array.isArray(parsed.recommendedNextSteps)
             ? parsed.recommendedNextSteps
             : ['Review RAG evaluation frameworks', 'Practice vector quantization trade-offs'],
           dayScores,
           technicalLevel,
-          categoryScores
+          categoryScores,
         };
       }
     }
-  } catch (error) {
-    console.warn('Gemini final report generation error, using fallback report:', error);
+  } catch (err) {
+    console.error('Gemini final report generation error, using fallback report:', err);
   }
 
-  // Deterministic fallback report
-  const avg = scoresList.length > 0 ? (sum / scoresList.length) : 6;
-  
-  let fallbackTechnicalLevel: 'Emerging' | 'Competent' | 'Advanced' | 'Expert' = 'Competent';
-  if (avg >= 8.5) {
-    fallbackTechnicalLevel = 'Expert';
-  } else if (avg >= 7) {
-    fallbackTechnicalLevel = 'Advanced';
-  } else if (avg >= 5) {
-    fallbackTechnicalLevel = 'Competent';
-  } else {
-    fallbackTechnicalLevel = 'Emerging';
-  }
+  // Fallback report
+  const avg = scoresList.length > 0 ? scoresList.reduce((a, b) => a + b, 0) / scoresList.length : 6;
+  let level: 'Emerging' | 'Competent' | 'Advanced' | 'Expert' = 'Competent';
+  if (avg >= 8.5) level = 'Expert';
+  else if (avg >= 7) level = 'Advanced';
+  else if (avg >= 5) level = 'Competent';
+  else level = 'Emerging';
 
   return {
     overallSummary: `${candidate.name} completed the technical interview covering ${Object.keys(dayScores).length} curriculum days with an average score of ${avg.toFixed(1)}/10. Shows clear engineering potential with target growth areas in production edge cases.`,
     strengths: [
-      `${candidate.completedDays.slice(0, 3).join(', ')}`,
+      `Demonstrated understanding of core concepts in completed cohort days (${candidate.completedDays.slice(0, 3).join(', ')})`,
       'Engaged in multi-turn adaptive technical questions',
       'Articulated engineering decisions under scenario constraints'
     ],
@@ -318,7 +261,7 @@ export async function generateFinalFeedback(
       'Review continuous batching and PagedAttention in vLLM serving'
     ],
     dayScores,
-    technicalLevel: fallbackTechnicalLevel,
-    categoryScores
+    technicalLevel: level,
+    categoryScores,
   };
 }

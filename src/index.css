@@ -1,346 +1,85 @@
+@import "tailwindcss";
 
-/* =========================================================
-   SHAYAK - GLOBAL STYLES
-========================================================= */
-
-/* ---------------------------------------------------------
-   ROOT
---------------------------------------------------------- */
-
-:root {
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-
-  color-scheme: light;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@keyframes splashProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
 }
 
-
-/* ---------------------------------------------------------
-   DARK MODE
---------------------------------------------------------- */
-
-.dark {
-  color-scheme: dark;
+.animate-splashProgress {
+  animation: splashProgress 1.5s ease-out forwards;
 }
 
+@layer utilities {
+  .bg-grid-canvas {
+    background-color: #0b1120;
+    background-image:
+      linear-gradient(to right, rgba(71, 85, 105, 0.16) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(71, 85, 105, 0.16) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
 
-/* ---------------------------------------------------------
-   RESET
---------------------------------------------------------- */
+  .bg-grid-canvas-light {
+    background-color: #f8fafc;
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+  .glass-card {
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(51, 65, 85, 0.75);
+  }
+
+  .glass-card-light {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+  }
+
+  .glass-modal {
+    background: rgba(11, 17, 32, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid #334155;
+  }
+
+  .glass-modal-light {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  }
 }
 
-
-html {
-  margin: 0;
-  padding: 0;
-  min-width: 320px;
-  min-height: 100%;
-  scroll-behavior: smooth;
-}
-
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-
-  font-family: inherit;
-
-  background: #f8fafc;
-  color: #0f172a;
-
-  transition:
-    background-color 250ms ease,
-    color 250ms ease;
-}
-
-
-.dark body {
-  background: #0b1020;
-  color: #f8fafc;
-}
-
-
-/* ---------------------------------------------------------
-   ROOT ELEMENT
---------------------------------------------------------- */
-
-#root {
-  min-height: 100vh;
-  width: 100%;
-}
-
-
-/* ---------------------------------------------------------
-   TEXT
---------------------------------------------------------- */
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p {
-  margin-top: 0;
-}
-
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 700;
-}
-
-
-p {
-  line-height: 1.6;
-}
-
-
-/* ---------------------------------------------------------
-   LINKS
---------------------------------------------------------- */
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-
-/* ---------------------------------------------------------
-   BUTTONS
---------------------------------------------------------- */
-
-button {
-  font: inherit;
-  border: 0;
-  cursor: pointer;
-}
-
-
-button:disabled {
-  cursor: not-allowed;
-}
-
-
-/* ---------------------------------------------------------
-   INPUTS
---------------------------------------------------------- */
-
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-
-input::placeholder,
-textarea::placeholder {
-  color: #94a3b8;
-}
-
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: #64748b;
-}
-
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-}
-
-
-/* ---------------------------------------------------------
-   TEXTAREA
---------------------------------------------------------- */
-
-textarea {
-  line-height: 1.6;
-}
-
-
-/* ---------------------------------------------------------
-   SELECTION
---------------------------------------------------------- */
-
-::selection {
-  background: rgba(99, 102, 241, 0.25);
-  color: inherit;
-}
-
-
-/* ---------------------------------------------------------
-   SCROLLBAR
---------------------------------------------------------- */
-
+/* Custom crisp scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
-
 
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
+  background: #334155;
+  border-radius: 3px;
 }
-
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
-
-
-.dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
 
-
-/* ---------------------------------------------------------
-   FIREFOX SCROLLBAR
---------------------------------------------------------- */
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
 }
 
-
-.dark * {
-  scrollbar-color: #334155 transparent;
-}
-
-
-/* ---------------------------------------------------------
-   SMOOTH THEME TRANSITION
---------------------------------------------------------- */
-
-body,
-button,
-input,
-textarea,
-select,
-header,
-aside,
-section,
-footer {
-  transition:
-    background-color 200ms ease,
-    border-color 200ms ease,
-    color 200ms ease;
-}
-
-
-/* ---------------------------------------------------------
-   UTILITY
---------------------------------------------------------- */
-
-.no-scroll {
-  overflow: hidden;
-}
-
-
-.full-height {
-  min-height: 100vh;
-}
-
-
-/* ---------------------------------------------------------
-   MOBILE TAP BEHAVIOR
---------------------------------------------------------- */
-
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-
-/* ---------------------------------------------------------
-   ACCESSIBILITY
---------------------------------------------------------- */
-
-:focus-visible {
-  outline: 2px solid #6366f1;
-  outline-offset: 2px;
-}
-
-
-/* ---------------------------------------------------------
-   REDUCED MOTION
---------------------------------------------------------- */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-
-/* ---------------------------------------------------------
-   MOBILE
---------------------------------------------------------- */
-
-@media (max-width: 640px) {
-  html {
-    font-size: 15px;
-  }
-
-  body {
-    overflow-x: hidden;
-  }
-}
-
-
-/* ---------------------------------------------------------
-   PRINT
---------------------------------------------------------- */
-
-@media print {
-  body {
-    background: white !important;
-    color: black !important;
-  }
-
-  button,
-  aside,
-  header {
-    display: none !important;
-  }
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

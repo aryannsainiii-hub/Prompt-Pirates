@@ -1,237 +1,142 @@
-/* =========================================================
-   SHAYAK - APPLICATION TYPES
-========================================================= */
+export interface CurriculumDay {
+  day: number;
+  title: string;
+  module: string;
+  type?: string;
+  description: string;
+  keyConcepts: string[];
+  sampleQuestions: string[];
+  tools?: string[];
+  objectives?: string[];
+}
 
-/* ---------------------------------------------------------
-   THEME & LANGUAGE
---------------------------------------------------------- */
+export interface CurriculumModule {
+  n: number;
+  title: string;
+  days: [number, number];
+}
 
-export type ThemeMode = "light" | "dark";
+export interface CandidateMission {
+  day: number;
+  title: string;
+  passed?: boolean;
+  attempts?: number;
+  skipped?: boolean;
+}
 
-export type Language = "English" | "Hindi";
+export interface CandidateSignals {
+  commitDays: number;
+  missionsCompleted: number;
+  missionsFirstTry: number;
+}
 
-
-/* ---------------------------------------------------------
-   NAVIGATION
---------------------------------------------------------- */
-
-export type View =
-  | "arena"
-  | "candidates"
-  | "reports"
-  | "settings";
-
-
-/* ---------------------------------------------------------
-   MODALS
---------------------------------------------------------- */
-
-export type ModalType =
-  | "none"
-  | "howItWorks"
-  | "candidate"
-  | "finalReport";
-
-
-/* ---------------------------------------------------------
-   CANDIDATE
---------------------------------------------------------- */
-
-export type CandidateStatus =
-  | "Ready"
-  | "In Progress"
-  | "Completed";
-
-export type Candidate = {
-  id: number;
-
-  name: string;
-
-  role: string;
-
-  email: string;
-
-  experience: string;
-
-  skills: string[];
-
-  avatar: string;
-
-  status: CandidateStatus;
-
-  score?: number;
-};
-
-
-/* ---------------------------------------------------------
-   INTERVIEW QUESTIONS
---------------------------------------------------------- */
-
-export type QuestionDifficulty =
-  | "Easy"
-  | "Medium"
-  | "Hard";
-
-export type Question = {
-  id: number;
-
-  category: string;
-
-  difficulty: QuestionDifficulty;
-
-  question: string;
-
-  expectedTime: number;
-};
-
-
-/* ---------------------------------------------------------
-   INTERVIEW CHAT
---------------------------------------------------------- */
-
-export type MessageSender =
-  | "system"
-  | "candidate"
-  | "interviewer";
-
-export type Message = {
-  id: number;
-
-  sender: MessageSender;
-
-  text: string;
-
-  timestamp: string;
-};
-
-
-/* ---------------------------------------------------------
-   INTERVIEW SESSION
---------------------------------------------------------- */
-
-export type SessionStatus =
-  | "idle"
-  | "active"
-  | "completed";
-
-export type InterviewSession = {
+export interface CandidateMember {
   id: string;
+  name: string;
+  jobRole: string;
+  yearsExperience: number;
+  education: string;
+  status: string;
+}
 
-  candidateId: number;
-
-  startedAt: number | null;
-
-  currentQuestion: number;
-
-  answeredQuestions: number;
-
-  totalQuestions: number;
-
-  score: number;
-
-  status: SessionStatus;
-};
-
-
-/* ---------------------------------------------------------
-   EVALUATION REPORT
---------------------------------------------------------- */
-
-export type Recommendation =
-  | "Strong Hire"
-  | "Hire"
-  | "Review";
-
-export type Report = {
-  id: number;
-
-  candidateId: number;
-
-  candidateName: string;
-
+export interface CandidateProfile {
+  id: string;
+  name: string;
   role: string;
+  background: string;
+  experienceLevel: string;
+  completedDays: number[];
+  targetAreas: string[];
+  notes: string;
+  member?: CandidateMember;
+  missions?: CandidateMission[];
+  signals?: CandidateSignals;
+}
 
-  score: number;
+export interface EvaluationResult {
+  score: number; // 1 to 10
+  feedback: string;
+  strengths: string[];
+  gaps: string[];
+  needsFollowUp: boolean;
+  suggestedTopic?: string;
+}
 
-  technical: number;
-
-  communication: number;
-
-  problemSolving: number;
-
-  recommendation: Recommendation;
-
-  date: string;
-};
-
-
-/* ---------------------------------------------------------
-   FINAL ASSESSMENT
---------------------------------------------------------- */
-
-export type FinalAssessment = {
-  score: number;
-
-  technical: number;
-
-  communication: number;
-
-  problemSolving: number;
-};
-
-
-/* ---------------------------------------------------------
-   QUICK ANSWERS
---------------------------------------------------------- */
-
-export type QuickAnswer = {
-  id: number;
-
-  label: string;
-
-  text: string;
-};
-
-
-/* ---------------------------------------------------------
-   APPLICATION STATE
---------------------------------------------------------- */
-
-export type AppState = {
-  theme: ThemeMode;
-
-  language: Language;
-
-  activeView: View;
-
-  selectedCandidate: Candidate | null;
-
-  modal: ModalType;
-
-  searchQuery: string;
-
+export interface InterviewTurn {
+  turnNumber: number;
+  day: number;
+  dayTitle: string;
+  question: string;
   answer: string;
+  evaluation: EvaluationResult | null;
+  timestamp: string;
+}
 
-  elapsedTime: number;
+export interface FinalFeedback {
+  overallSummary: string;
+  strengths: string[];
+  gaps: string[];
+  recommendedNextSteps: string[];
+  dayScores: Record<number, number>;
+  technicalLevel: 'Emerging' | 'Competent' | 'Advanced' | 'Expert';
+  categoryScores?: {
+    overallScore: number;
+    technicalAccuracy: number;
+    depth: number;
+    reasoning: number;
+    communication: number;
+  };
+}
 
-  messages: Message[];
+export interface InterviewSession {
+  sessionId: string;
+  candidate: CandidateProfile;
+  plannedDays: number[];
+  turns: InterviewTurn[];
+  currentQuestion: string | null;
+  currentQuestionDay: number | null;
+  currentTurnNumber: number;
+  daysCovered: number[];
+  questionCount: number;
+  isCompleted: boolean;
+  finalFeedback: FinalFeedback | null;
+  language?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
+export interface StartInterviewRequest {
+  candidateId: string;
+  language?: string;
+}
+
+export interface SubmitAnswerRequest {
+  sessionId: string;
+  answer: string;
+  language?: string;
+}
+
+export interface InterviewStepResponse {
   session: InterviewSession;
-};
+  lastEvaluation?: EvaluationResult;
+  isCompleted: boolean;
+}
 
+// Technical Specification API Contract Interfaces
+export interface ApiInterviewRequest {
+  sessionId: string;
+  candidate?: CandidateProfile | CandidateMember;
+  message?: string;
+  language?: string;
+}
 
-/* ---------------------------------------------------------
-   INTERVIEW METRICS
---------------------------------------------------------- */
-
-export type InterviewMetrics = {
-  progress: number;
-
-  score: number;
-
-  answered: number;
-
-  totalQuestions: number;
-
-  elapsedTime: number;
-};
+export interface ApiInterviewResponse {
+  reply: string;
+  done: boolean;
+  feedback?: {
+    summary: string;
+    strengths: string[];
+    gaps: string[];
+    next: string[];
+  };
+}
