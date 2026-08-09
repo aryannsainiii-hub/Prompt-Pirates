@@ -1,7 +1,7 @@
 // emty file
 
-// import { InterviewSession } from '../types';
-// import { CANDIDATE_PROFILES } from './candidates';
+import { InterviewSession } from '../types';
+import { CANDIDATE_PROFILES } from './candidates';
 
 export const SAMPLE_EVALUATION_REPORTS: Record<string, InterviewSession> = {
   'CAND-007': {
