@@ -1,1 +1,6 @@
-// emptyfile
+{
+  "name": "AI Interview Agent",
+  "description": "Adaptive AI Technical Interviewer for the 31-day AI Cohort based on candidate profiles, curriculum topics, and structured evaluations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
